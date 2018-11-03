@@ -1,26 +1,38 @@
 #!/usr/bin/env perl6
 
-#use Grammar::Tracer;
+use Grammar::Tracer;
 grammar Berna {
     token TOP($*INDENT = "")        { \s* <line>* %% \n+ \s* || <error("syntax not recognized")> }
     token line                      { ^^ <.indent> <statement> \h* $$ }
     token indent                    { $*INDENT }
-    proto token statement           { * }
-    token statement:sym<func>       { <decl-func(%*vars.clone, @*types.clone, %*functions.clone)> }
-    token statement:sym<value>      { <value> }
-    token statement:sym<var-dec>    {
+    proto token control             { * }
+    token control:sym<If>           { <sym> \h+ }
+    token control:sym<For>          { <sym> \h+ }
+    token control:sym<While>        { <sym> \h+ }
+    proto token declare             { * }
+    token declare:sym<var>          {
         <type-name> \h+
         <name>
-        { $*last-statement-type = $<type-name>.Str }
+        {
+            %*vars{ $<name> } = $<type-name>.Str;
+            $*last-statement-type = $<type-name>.Str
+        }
         [ \h+ <statement> ]?
     }
-    token statement:sym<call-fun>   {
+    token declare:sym<func>         { <decl-func(%*vars.clone, @*types.clone, %*functions.clone)> }
+    proto token statement           { * }
+    token statement:sym<decl>       { <declare> }
+    token statement:sym<value>      { <value-ret> }
+    proto token value-ret           { * }
+    token value-ret:sym<val>        { <value> }
+    token value-ret:sym<call-fun>   {
         <func-name> \h+
         {}
         <arg-list(%*functions{$<func-name>.Str}<signature>)>
         { $*last-statement-type = %*functions{$<func-name>.Str}<return> }
     }
-    token statement:sym<var>        {
+    token value-ret:sym<var>        {
+        { say %*vars }
         <var-name>
         {
             $*last-statement-type = %*vars{ $<var-name>.Str }
@@ -67,7 +79,7 @@ grammar Berna {
         [\n <line>+ % \n+]?
     }
     token arg-list(@sig)            { <wanted(@sig.shift)>+ % \h+}
-    token wanted($*wanted)          { <statement>}
+    token wanted($*wanted)          { <value-ret>}
     proto token value               { * }
     token value:sym<num>            { <.want("Number")> \d+ { $*last-statement-type = "Number" } }
     token value:sym<sstr>           { <.want("String")> "'" ~ "'" $<str>=<-[']>* { $*last-statement-type = "String" } }
