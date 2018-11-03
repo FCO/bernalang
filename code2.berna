@@ -1,0 +1,6 @@
+String userName 'Jon Doe'
+Number userAge 30
+print userAge
+Function String greet String name
+	print 'hello $name'
+greet 'Berna'

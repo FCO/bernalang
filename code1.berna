@@ -1,0 +1,38 @@
+From List Expose All Map Concat
+From IO Expose Print
+
+String userName 'Jon Doe'
+Number userAge 30
+
+
+Function String greet String name
+ 'Welcome $name!'
+
+greet userName // "Welcome Jon Doe!"
+
+
+Function String sayBye String name
+ 'Goodbye $name!'
+
+
+Function Boolean isOverage Number age
+ age >= 18
+
+
+Function String allowedToEnter List Number ages
+ Boolean mayEnter All isOverage ages
+   greet 'guys' If mayEnter Else sayBye 'y\'all'
+
+
+List Number ages1 userAge userAge // [30, 30]
+Print allowedToEnter ages1 // "Welcome guys!"
+
+List Number ages2 Concat ages1 16 // [30, 30, 16]
+Print allowedToEnter ages2 // "Goodbye y'all!"
+
+
+Function Number double Number n
+ n * 2
+
+List Number ages3 Map ages2 double // [60, 60, 32]
+Print allowedToEnter ages3 // "Welcome guys!"```
