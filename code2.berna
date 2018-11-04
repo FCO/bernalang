@@ -1,6 +1,6 @@
 String userName 'Jon Doe'
 Number userAge 30
 print toString userAge
-Function String greet String name
+Function Void greet String name
 	print 'hello $name'
 greet 'Berna'

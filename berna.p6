@@ -45,7 +45,7 @@ grammar Berna {
         <body($<new-indent>.Str)>
         {
             self.error("function $<func-proto><name> should return $<func-proto><type-name> but is returning $*last-statement-type")
-                unless $*last-statement-type eq $<func-proto><type-name>.Str
+                unless self.isa($*last-statement-type, $<func-proto><type-name>.Str)
         }
     }
     token new-indent                { <.indent> \h+ || <error("error on indentation")> }
@@ -123,7 +123,7 @@ grammar Berna {
         <var>
         {
             self.error("wanted $*wanted but got variable of type %*vars{$<var>.Str}")
-                if $*wanted.defined and %*vars{$<var>.Str} ne $*wanted;
+                if $*wanted.defined and not self.isa(%*vars{$<var>.Str}, $*wanted);
         }
     }
     token func {
@@ -134,12 +134,12 @@ grammar Berna {
         <func>
         {
             self.error("wanted $*wanted but got a functions that returns %*functions{$<func>.Str}<return>")
-                if $*wanted.defined and %*functions{$<func>.Str}<return> ne $*wanted;
+                if $*wanted.defined and not self.isa(%*functions{$<func>.Str}<return>, $*wanted);
         }
     }
 
     token want(Str $want) {
-        || <?{ not $*wanted.defined or  $want eq $*wanted }>
+        || <?{ not $*wanted.defined or self.isa($want, $*wanted) }>
         || <error("wanted $want but got $*wanted")>
     }
     method error($msg) {
@@ -153,6 +153,10 @@ grammar Berna {
         note "\nCompiling ERROR on line @lines.elems():\n";
         note "$msg: \o033[32m@lines[*-1].trim-leading()\o033[33m⏏\o033[31m$not-parsed\o033[m";
         exit 1;
+    }
+    method isa($t1, $t2) {
+        # TODO: test its parents too
+        $t1 eq $t2
     }
 }
 
