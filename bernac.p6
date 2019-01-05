@@ -15,7 +15,7 @@ multi MAIN(Code :$e!) {
 multi MAIN(*@file, Bool :$print-code = False, Bool :$print-ast = False, Bool :$print-list = False) {
     my $code = @file>>.IO>>.slurp.join("\n");
     if $print-code {
-        note "AST:";
+        note "CODE:";
         note $code;
         note "------------\n"
     }
