@@ -7,7 +7,12 @@ method indent($/) {}
 method control:sym<If>($/) {}
 method control:sym<For>($/) {}
 method control:sym<While>($/) {}
-method declare:sym<var>($/) {}
+method declare:sym<var>($/) {
+    make Berna::AST::DeclareVariable.new:
+        :type($<type-name>.made),
+        :variable-name($<name>.made),
+        |(:rvalue(.made) with $<statement>)
+}
 method declare:sym<func>($/) { make $<decl-func>.made }
 method statement:sym<decl>($/) { make $<declare>.made }
 method statement:sym<value>($/) { make $<value-ret>.made }

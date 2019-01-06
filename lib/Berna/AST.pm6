@@ -39,7 +39,30 @@ role Berna::AST::Variable does Berna::AST {
     has Str $.variable-name is required;
     has Str $.type is required;
     method gist {
-        "{self.^name} :variable-name($!variable-name)"
+        "{self.^name} :variable-name($!variable-name) :type($!type)"
+    }
+}
+
+class Berna::AST::SetVariable does Berna::AST::Variable {
+    has Berna::AST $.rvalue is required;
+
+    method args { $!rvalue }
+    method gist {
+        "{self.^name} :variable-name($!variable-name) :type($!type)\n{ $.args.map(*.gist).join("\n").indent: 3 }"
+    }
+}
+
+class Berna::AST::DeclareVariable does Berna::AST::Variable {
+    has Berna::AST $.rvalue;
+
+    method args { $_ with $!rvalue }
+    method gist {
+        "{self.^name} :variable-name($!variable-name) :type($!type){"\n{ .map(*.gist).join("\n").indent: 3 }" with $.args}"
+    }
+
+    method SetVariable {
+        return Empty without $!rvalue;
+        Berna::AST::SetVariable.new: :$!variable-name, :$!type, :$!rvalue
     }
 }
 
