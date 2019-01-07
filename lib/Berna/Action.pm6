@@ -50,10 +50,14 @@ method value:sym<num>($/) { make Berna::AST::NVal.new: :value($/.Int) }
 method value:sym<sstr>($/) { make Berna::AST::SVal.new: :value($<str>.Str) }
 method value:sym<dstr>($/) { make $<str>.made }
 method str($/) {
-    make Berna::AST::CallFunction.new:
-        :function-name<concat>,
-        :args(|$<str-part>>>.made),
-        :type<String>
+    if $<str-part> == 1 {
+        make $<str-part>.head.made
+    } else {
+        make Berna::AST::CallFunction.new:
+            :function-name<concat>,
+            :args(|$<str-part>>>.made),
+            :type<String>
+    }
 }
 method str-part:sym<str>($/) { make Berna::AST::SVal.new: :value($/.Str) }
 method str-part:sym<var>($/) { make Berna::AST::VariableVal.new: :variable-name($<var-name>.Str), :type(%*vars{$<var-name>.Str}) }

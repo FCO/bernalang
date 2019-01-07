@@ -52,6 +52,13 @@ class Berna::AST::SetVariable does Berna::AST::Variable {
     }
 }
 
+class Berna::AST::PullToVariable does Berna::AST::Variable {
+    method args {}
+    method gist {
+        "{self.^name} :variable-name($!variable-name) :type($!type)"
+    }
+}
+
 class Berna::AST::DeclareVariable does Berna::AST::Variable {
     has Berna::AST $.rvalue;
 

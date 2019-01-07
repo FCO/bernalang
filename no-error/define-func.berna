@@ -1,3 +1,4 @@
 Function Void greet String name
    print "hello ${name}"
 greet "Berna"
+print "done"
