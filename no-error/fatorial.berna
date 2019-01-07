@@ -1,0 +1,6 @@
+Function Number fat Number num
+   Number ret 1
+   If not equal num 1
+      Set ret mul num fat sub num 1
+   ret
+print toString fat 5

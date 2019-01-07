@@ -1,12 +1,10 @@
+#!/usr/bin/env perl6
 use Berna::Parser;
 use Berna::Compiler;
 use Berna::RunTime;
 subset Code of Str;
 
 my %*SUB-MAIN-OPTS = :named-anywhere;
-
-my $parser   = Berna::Parser.new;
-my $compiler = Berna::Compiler.new;
 
 multi MAIN(*@file, *%_) {
     my $code = @file>>.IO>>.slurp.join("\n");
@@ -17,7 +15,17 @@ multi MAIN(Str :$e!, *%_) {
     run $e, |%_
 }
 
-multi run(Str $code, Bool :$print-code = False, Bool :$print-ast = False, Bool :$print-list = False, Bool :$print-runtime = False) {
+multi run(
+    Str $code,
+    Bool :$print-match   = False,
+    Bool :$print-code    = False,
+    Bool :$print-ast     = False,
+    Bool :$print-list    = False,
+    Bool :$print-runtime = False
+) {
+    my $parser   = Berna::Parser.new: :debug($print-match);
+    my $compiler = Berna::Compiler.new;
+
     if $print-code {
         note "CODE:";
         note $code;

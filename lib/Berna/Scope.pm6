@@ -3,6 +3,10 @@ unit class Berna::Scope;
 has             %.vars;
 has ::?CLASS    $.parent;
 
+method child {
+    ::?CLASS.new: :parent(self)
+}
+
 method declare(::?CLASS:D: $name, $type) {
     die "Try to redeclare var called $name" if %!vars{$name}:exists;
     %!vars{$name} = {:$type}

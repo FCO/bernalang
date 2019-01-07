@@ -1,0 +1,6 @@
+Number bla 1
+Function Void greet String name
+   Number bla 2
+   print toString bla
+greet "Berna"
+print toString bla

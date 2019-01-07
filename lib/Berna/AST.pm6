@@ -52,6 +52,8 @@ class Berna::AST::SetVariable does Berna::AST::Variable {
     }
 }
 
+class Berna::AST::SetFunction is Berna::AST::SetVariable {}
+
 class Berna::AST::PullToVariable does Berna::AST::Variable {
     method args {}
     method gist {
@@ -70,6 +72,13 @@ class Berna::AST::DeclareVariable does Berna::AST::Variable {
     method SetVariable {
         return Empty without $!rvalue;
         Berna::AST::SetVariable.new: :$!variable-name, :$!type, :$!rvalue
+    }
+}
+
+class Berna::AST::DeclareFunction is Berna::AST::DeclareVariable {
+    method SetFunction {
+        return Empty without $.rvalue;
+        Berna::AST::SetFunction.new: :variable-name($.variable-name), :type($.type), :rvalue($.rvalue)
     }
 }
 
@@ -104,6 +113,23 @@ class Berna::AST::Function does Berna::AST::HasType {
         "{self.^name} :name($!name):\n{[
             ":signature[\n{@.signature.map(*.gist).join("\n").indent: 3}\n]",
             ":body[\n{@.body.map(*.gist).join("\n").indent: 3}\n]"
+        ].join("\n").indent: 3}"
+    }
+}
+
+class Berna::AST::If does Berna::AST {
+    has Berna::AST $.condition is required;
+    has Berna::AST @.body;
+    has Berna::AST @.else;
+
+    method type { "Void" }
+    method args {}
+
+    method gist {
+        "{self.^name}:\n{[
+            ":condition[\n{$!condition.gist.indent: 3}\n]",
+            ":if[\n{@!body.map(*.gist).join("\n").indent: 3}\n]",
+            ":else[\n{@!else.map(*.gist).join("\n").indent: 3}\n]",
         ].join("\n").indent: 3}"
     }
 }

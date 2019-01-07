@@ -5,15 +5,31 @@ token line                      { ^^ <.indent> <statement> \h* <unexpected-data>
 token unexpected-data           { \S+ && <error("unexpected data")> }
 token indent                    { $*INDENT }
 proto token control             { * }
-token control:sym<If>           { <sym> \h+ }
-token control:sym<For>          { <sym> \h+ }
-token control:sym<While>        { <sym> \h+ }
+token control:sym<If>           {
+	<sym> \h+ <wanted("Boolean")> \n
+    <new-indent>{}
+    <body($<new-indent>.Str)>
+}
+token control:sym<For>          {
+    <sym> \h+
+	<type-name> \h+
+    <name> <value-ret> \n
+    <new-indent> {}
+    <body($<new-indent>.Str)>
+}
+token control:sym<While>        {
+	<sym> \h+ <statement> \n
+    <new-indent>{}
+    <body($<new-indent>.Str)>
+}
 proto token declare             { * }
 token declare:sym<var>          {
     <type-name> \h+
     <name>
     {
+		self.error: "redeclaration of variable '$<name>'" if %*scope-vars{ $<name>.Str };
         %*vars{ $<name> } = $<type-name>.Str;
+        %*scope-vars{ $<name>.Str }++;
         $*last-statement-type = $<type-name>.Str
     }
     [ \h+ <statement> ]?
@@ -22,29 +38,39 @@ token declare:sym<func>         { <decl-func(%*vars.clone, @*types.clone, %*func
 proto token statement           { * }
 token statement:sym<decl>       { <declare> }
 token statement:sym<value>      { <value-ret> }
+token statement:sym<set-var>    {
+    "Set" \h+ <?>
+    <name>
+    {}
+    \h+ <wanted(%*vars{ $<name> })>
+}
+token statement:sym<control>    { <control> }
+token statement:sym<error>		{ <name> {} && <error("unrecognized function '$<name>'")> }
 proto token value-ret           { * }
 token value-ret:sym<val>        { <value> }
 token value-ret:sym<call-fun>   {
     <func-name> [ \h+
 		{}
-		<arg-list(%*functions{$<func-name>.Str}<signature>.clone)>
-		{ $*last-statement-type = %*functions{$<func-name>.Str}<return> }
+		<arg-list(%*functions{$<func-name>}<signature>.clone)>
+		{ $*last-statement-type = %*functions{$<func-name>}<return> }
 	]?
 }
 token value-ret:sym<var>        {
     <var-name>
     {
-        $*last-statement-type = %*vars{ $<var-name>.Str }
+        $*last-statement-type = %*vars{ $<var-name> }
     }
 }
 token decl-func(%*vars, @*types, %*functions)       {
+	:my %*scope-vars := SetHash.new;
     :my $*last-statement-type;
     <func-proto> \n
     <new-indent>{}
     <body($<new-indent>.Str)>
     {
-        self.error("function $<func-proto><name> should return $<func-proto><type-name> but is returning $*last-statement-type")
-            unless self.isa($*last-statement-type, $<func-proto><type-name>.Str)
+        self.error: "function $<func-proto><name> should return $<func-proto><type-name> but is returning $*last-statement-type"
+            unless self.isa($<func-proto><type-name>.Str, "Void")
+				or self.isa($*last-statement-type, $<func-proto><type-name>.Str)
     }
 }
 token new-indent                { <.indent> \h+ || <error("error on indentation")> }
@@ -52,7 +78,8 @@ token pair-args(@signature)     {
     <type-name> \h+
     <name> {
         @signature.push: $<type-name>.Str;
-        %*vars{$<name>.Str} = $<type-name>.Str
+        %*vars{$<name>} = $<type-name>.Str;
+        %*scope-vars{$<name>.Str}++
     }
 }
 token func-proto                {
@@ -124,8 +151,8 @@ token var                       {
 token var-name {
     <var>
     {
-        self.error("wanted $*wanted but got variable of type %*vars{$<var>.Str}")
-            if $*wanted.defined and not self.isa(%*vars{$<var>.Str}, $*wanted);
+        self.error("wanted $*wanted but got variable of type %*vars{$<var>}")
+            if $*wanted.defined and not self.isa(%*vars{$<var>}, $*wanted);
     }
 }
 token func {
@@ -142,7 +169,7 @@ token func-name {
 
 token want(Str $want) {
     || <?{ not $*wanted.defined or self.isa($want, $*wanted) }>
-    || <error("wanted $want but got $*wanted")>
+    || <error("wanted $*wanted but got $want")>
 }
 method error($msg) {
     my $parsed-so-far = self.target.substr(0, self.pos);

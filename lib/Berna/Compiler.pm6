@@ -44,9 +44,19 @@ multi method compile(Berna::AST::DeclareVariable $_) {
     self.compile: .SetVariable
 }
 
+multi method compile(Berna::AST::DeclareFunction $_) {
+    self.take-inc: ["DECLARE-FUNC", .variable-name, .type];
+    self.compile: .SetFunction
+}
+
 multi method compile(Berna::AST::SetVariable $_) {
     self.compile(.rvalue),
     self.take-inc: ["SET-VAR", .variable-name]
+}
+
+multi method compile(Berna::AST::SetFunction $_) {
+    self.compile(.rvalue),
+    self.take-inc: ["SET-FUNC", .variable-name]
 }
 
 multi method compile(Berna::AST::PullToVariable $_) {
@@ -62,11 +72,23 @@ multi method compile(Berna::AST::Param $_) {
     self.compile: Berna::AST::PullToVariable.new:  :variable-name(.name), :type(.type)
 }
 
+multi method compile(Berna::AST::If $_) {
+    self.compile: .condition;
+    my $begin = $*next;
+    my @body = gather {
+        my $*next = $begin + 2;
+        self.compile: $_ for .body
+    }
+    self.compile: Berna::AST::NVal.new: :value($*next + @body + 2);
+    self.take-inc: ["JUMP-IF-FALSE"];
+    self.take-inc: $_ for @body
+}
+
 multi method compile(Berna::AST::Function $_) {
     my $type            = .type;
     my $variable-name   = .name;
     my $rvalue          = Berna::AST::NVal.new: :value($*next + 4);
-    self.compile: Berna::AST::DeclareVariable.new: :$type, :$variable-name, :$rvalue;
+    self.compile: Berna::AST::DeclareFunction.new: :$type, :$variable-name, :$rvalue;
     my $begin           = $*next;
     my @lines = gather {
         my $*next = $begin + 1;

@@ -4,7 +4,9 @@ method TOP($/) { make $<line>>>.made }
 method line($/) { make $<statement>.made }
 method unexpected-data($/) {}
 method indent($/) {}
-method control:sym<If>($/) {}
+method control:sym<If>($/) {
+    make Berna::AST::If.new: :condition($<wanted>.made), :body($<body>.made);
+}
 method control:sym<For>($/) {}
 method control:sym<While>($/) {}
 method declare:sym<var>($/) {
@@ -16,6 +18,13 @@ method declare:sym<var>($/) {
 method declare:sym<func>($/) { make $<decl-func>.made }
 method statement:sym<decl>($/) { make $<declare>.made }
 method statement:sym<value>($/) { make $<value-ret>.made }
+method statement:sym<set-var>($/) {
+    make Berna::AST::SetVariable.new:
+        :type($<type-name>.made),
+        :variable-name($<name>.made),
+        :rvalue($<wanted>.made)
+}
+method statement:sym<control>($/) { make $<control>.made }
 method value-ret:sym<val>($/) { make $<value>.made }
 method value-ret:sym<call-fun>($/) {
     make Berna::AST::CallFunction.new:
