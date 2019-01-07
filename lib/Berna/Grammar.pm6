@@ -9,6 +9,9 @@ token control:sym<If>           {
 	<sym> \h+ <wanted("Boolean")> \n
     <new-indent>{}
     <body($<new-indent>.Str)>
+	{
+        $*last-statement-type = "Void"
+	}
 }
 token control:sym<For>          {
     <sym> \h+
@@ -16,11 +19,17 @@ token control:sym<For>          {
     <name> <value-ret> \n
     <new-indent> {}
     <body($<new-indent>.Str)>
+	{
+        $*last-statement-type = "Void"
+	}
 }
 token control:sym<While>        {
 	<sym> \h+ <statement> \n
     <new-indent>{}
     <body($<new-indent>.Str)>
+	{
+        $*last-statement-type = "Void"
+	}
 }
 proto token declare             { * }
 token declare:sym<var>          {
