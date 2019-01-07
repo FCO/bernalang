@@ -17,3 +17,9 @@ multi method lookup(::?CLASS:D: $name) {
 multi method lookup(::?CLASS:D: $name, Bool :$local where * === True) {
     %!vars{ $name }<value>
 }
+multi method typeof(::?CLASS:D: $name) {
+    self.?typeof($name, :local) // $!parent.?typeof($name)
+}
+multi method typeof(::?CLASS:D: $name, Bool :$local where * === True) {
+    %!vars{ $name }<type>
+}

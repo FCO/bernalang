@@ -21,7 +21,7 @@ method value-ret:sym<call-fun>($/) {
     make Berna::AST::CallFunction.new:
     :type(%*functions{$<func-name>}<return>),
     :function-name($<func-name>.made),
-    :args($<arg-list>.made)
+    |(:args($_) with $<arg-list>.made)
 }
 method value-ret:sym<var>($/) { make Berna::AST::VariableVal.new: :variable-name($<var-name>.Str), :type(%*vars{$<var-name>.Str}) }
 method decl-func($/) {

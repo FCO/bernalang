@@ -25,10 +25,11 @@ token statement:sym<value>      { <value-ret> }
 proto token value-ret           { * }
 token value-ret:sym<val>        { <value> }
 token value-ret:sym<call-fun>   {
-    <func-name> \h+
-    {}
-    <arg-list(%*functions{$<func-name>.Str}<signature>.clone)>
-    { $*last-statement-type = %*functions{$<func-name>.Str}<return> }
+    <func-name> [ \h+
+		{}
+		<arg-list(%*functions{$<func-name>.Str}<signature>.clone)>
+		{ $*last-statement-type = %*functions{$<func-name>.Str}<return> }
+	]?
 }
 token value-ret:sym<var>        {
     <var-name>
@@ -83,7 +84,10 @@ token body($*INDENT)            {
     <statement>
     [\n <line>+ % \n+]?
 }
-token arg-list(@sig)            {
+multi token arg-list(Any:U)            {
+    <error("function wants no arguments")>
+}
+multi token arg-list(@sig)            {
     :my $elems = @sig.elems;
     [
         || <wanted(@sig.shift)> ** { $elems } % \h+

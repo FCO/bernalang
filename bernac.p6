@@ -29,10 +29,11 @@ multi run(Str $code, Bool :$print-code = False, Bool :$print-ast = False, Bool :
         note $ast>>.gist.join: "\n";
         note "------------\n"
     }
+    die "unknown error" without $ast;
     my @list = $compiler.compile: $ast;
     if $print-list {
         note "LIST:";
-        note $++, ": ", $_ for @list;
+        note $++, ": \t", $_ for @list;
         note "------------\n"
     }
 
