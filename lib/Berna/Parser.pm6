@@ -19,6 +19,7 @@ has %.functions   =
     :not{       :signature[<Boolean>],          :return<Boolean>},
 ;
 has $!last-statement-type;
+has $.actions = Berna::Action.new;
 
 method parse(Str $e) {
     my @*types               := @!types;
@@ -27,7 +28,9 @@ method parse(Str $e) {
     my %*functions           := %!functions;
     my $*last-statement-type := $!last-statement-type;
 
-    my $match = Berna::Grammar.parse: $e, :actions(Berna::Action.new);
+	$!actions.var-number: $_ for %!functions.keys;
+
+    my $match = Berna::Grammar.parse: $e, :$!actions;
 	if $!debug {
 		note "MATCH:";
 		note $match;

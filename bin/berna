@@ -45,6 +45,6 @@ multi run(
         note "------------\n"
     }
 
-    my $run-time = Berna::RunTime.new: :code(@list), :debug($print-runtime);
+    my $run-time = Berna::RunTime.new: :code(@list), :debug($print-runtime), :vars($parser.actions.vars);
     $run-time.run
 }

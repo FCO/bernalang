@@ -36,8 +36,9 @@ class Berna::AST::BVal does Berna::AST::Value {
 }
 
 role Berna::AST::Variable does Berna::AST {
-    has Str $.variable-name is required;
-    has Str $.type is required;
+    has Str  $.variable-name is required;
+    has UInt $.variable-number is required;
+    has Str  $.type is required;
     method gist {
         "{self.^name} :variable-name($!variable-name) :type($!type)"
     }
@@ -71,14 +72,22 @@ class Berna::AST::DeclareVariable does Berna::AST::Variable {
 
     method SetVariable {
         return Empty without $!rvalue;
-        Berna::AST::SetVariable.new: :$!variable-name, :$!type, :$!rvalue
+        Berna::AST::SetVariable.new:
+            :$!variable-name,
+            :$!variable-number,
+            :$!type,
+            :$!rvalue
     }
 }
 
 class Berna::AST::DeclareFunction is Berna::AST::DeclareVariable {
     method SetFunction {
         return Empty without $.rvalue;
-        Berna::AST::SetFunction.new: :variable-name($.variable-name), :type($.type), :rvalue($.rvalue)
+        Berna::AST::SetFunction.new:
+            :variable-name($.variable-name),
+            :variable-number($.variable-number),
+            :type($.type),
+            :rvalue($.rvalue)
     }
 }
 
@@ -88,6 +97,7 @@ class Berna::AST::VariableVal does Berna::AST::HasType does Berna::AST::Variable
 
 class Berna::AST::CallFunction does Berna::AST::HasType {
     has Str         $.function-name is required;
+    has UInt        $.function-number is required;
     has Str         $.type is required;
     has Berna::AST  @.args handles <push pop>;
 
@@ -97,13 +107,15 @@ class Berna::AST::CallFunction does Berna::AST::HasType {
 }
 
 class Berna::AST::Param does Berna::AST::HasType {
-    has Str $.name is required;
-    has Str $.type is required;
+    has Str  $.name   is required;
+    has UInt $.number is required;
+    has Str  $.type   is required;
     method args {}
 }
 
 class Berna::AST::Function does Berna::AST::HasType {
     has Str                 $.name;
+    has UInt                $.number is required;
     has Str                 $.type is required;
     has Berna::AST::Param   @.signature;
     has Berna::AST          @.body handles <push pop>;
