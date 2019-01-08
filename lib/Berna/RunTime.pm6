@@ -21,6 +21,7 @@ proto method eval(|c) {
     note "CMD:     ", c.Array if $!debug;
     {*};
     note "STACK:   ", @!stack if $!debug;
+    note "SCOPE:   ", @!scope if $!debug;
     $!position++;
     note "POSITION: $!position" if $!debug;
 }
@@ -54,6 +55,10 @@ multi method eval("CALL-FUNC", "not", 1) { my $ret = not self.pop; $!position = 
 multi method eval("DECLARE-VAR", Str $name, Str $type) { self.scope.declare: $name, $type }
 
 multi method eval("DECLARE-FUNC", Str $name, Str $type) { self.scope.declare: $name, $type }
+
+multi method eval("NEW-SCOPE") { @!scope.push: self.scope.child }
+
+multi method eval("POP-SCOPE") { @!scope.pop }
 
 multi method eval("SET-VAR", Str $name) { self.scope.store: $name, self.pop }
 

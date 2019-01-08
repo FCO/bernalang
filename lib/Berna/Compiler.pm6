@@ -76,12 +76,14 @@ multi method compile(Berna::AST::If $_) {
     self.compile: .condition;
     my $begin = $*next;
     my @body = gather {
-        my $*next = $begin + 2;
+        my $*next = $begin + 3;
         self.compile: $_ for .body
     }
-    self.compile: Berna::AST::NVal.new: :value($*next + @body + 2);
+    self.compile: Berna::AST::NVal.new: :value($*next + @body + 4);
     self.take-inc: ["JUMP-IF-FALSE"];
-    self.take-inc: $_ for @body
+    self.take-inc: ["NEW-SCOPE"];
+    self.take-inc: $_ for @body;
+    self.take-inc: ["POP-SCOPE"];
 }
 
 multi method compile(Berna::AST::Function $_) {

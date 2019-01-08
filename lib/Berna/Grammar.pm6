@@ -6,6 +6,7 @@ token unexpected-data           { \S+ && <error("unexpected data")> }
 token indent                    { $*INDENT }
 proto token control             { * }
 token control:sym<If>           {
+	:my %*scope-vars := SetHash.new;
 	<sym> \h+ <wanted("Boolean")> \n
     <new-indent>{}
     <body($<new-indent>.Str)>
@@ -14,6 +15,7 @@ token control:sym<If>           {
 	}
 }
 token control:sym<For>          {
+	:my %*scope-vars := SetHash.new;
     <sym> \h+
 	<type-name> \h+
     <name> <value-ret> \n
@@ -24,6 +26,7 @@ token control:sym<For>          {
 	}
 }
 token control:sym<While>        {
+	:my %*scope-vars := SetHash.new;
 	<sym> \h+ <statement> \n
     <new-indent>{}
     <body($<new-indent>.Str)>
