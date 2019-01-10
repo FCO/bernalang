@@ -51,24 +51,24 @@ method run {
     $!context.compile-to-executable;
 }
 
-multi method eval("GOTO", $num) {
+multi method eval("GOTO", UInt:D $num) {
     @!blocks[$!position].end-with-jump: @!blocks[ $num ]
 }
 
-multi method eval("JUMP-IF-FALSE", $num) {
+multi method eval("JUMP-IF-FALSE", UInt:D $num) {
     self.add-pop: $!tmp1;
     @!blocks[$!position].end-with-conditional: $!tmp2, @!blocks[$!position + 1], @!blocks[ $num ]
 }
 
 multi method eval("PUSH-CONST", Int $val) { self.add-push: $!context.new-rvalue-from-int: $val }
 
-multi method eval("CALL-FUNC", UInt $ where { $_ == %!vars<print> }, 1, $num) {
+multi method eval("CALL-FUNC", UInt $ where { $_ == %!vars<print> }, 1, UInt:D $num) {
     self.add-pop: $!tmp1;
     self.add-print: $!tmp1;
     @!blocks[$!position].end-with-jump: @!blocks[ $num ]
 }
 
-multi method eval("CALL-FUNC", UInt $ where { $_ == %!vars<toString> }, 1, $num) {
+multi method eval("CALL-FUNC", UInt $ where { $_ == %!vars<toString> }, 1, UInt:D $num) {
     self.add-pop: $!tmp1;
     self.add-push: $!tmp1;
     @!blocks[$!position].end-with-jump: @!blocks[ $num ]
@@ -92,28 +92,28 @@ multi method eval("CALL-FUNC", UInt $ where { $_ == %!vars<toString> }, 1, $num)
 #    self.push: $ret
 #}
 
-multi method eval("CALL-FUNC", UInt $ where { $_ == %!vars<sum> }, 2, $num) {
+multi method eval("CALL-FUNC", UInt $ where { $_ == %!vars<sum> }, 2, UInt:D $num) {
     self.add-pop: $!tmp1;
     self.add-pop: $!tmp2;
     self.add-push: $!context.new-binary-plus: .int, $!tmp1, $!tmp2;
     @!blocks[$!position].end-with-jump: @!blocks[ $num ]
 }
 
-multi method eval("CALL-FUNC", UInt $ where { $_ == %!vars<sub> }, 2, $num) {
+multi method eval("CALL-FUNC", UInt $ where { $_ == %!vars<sub> }, 2, UInt:D $num) {
     self.add-pop: $!tmp1;
     self.add-pop: $!tmp2;
     self.add-push: $!context.new-binary-minus: .int, $!tmp1, $!tmp2;
     @!blocks[$!position].end-with-jump: @!blocks[ $num ]
 }
 
-multi method eval("CALL-FUNC", UInt $ where { $_ == %!vars<mul> }, 2, $num) {
+multi method eval("CALL-FUNC", UInt $ where { $_ == %!vars<mul> }, 2, UInt:D $num) {
     self.add-pop: $!tmp1;
     self.add-pop: $!tmp2;
     self.add-push: $!context.new-binary-mult: .int, $!tmp1, $!tmp2;
     @!blocks[$!position].end-with-jump: @!blocks[ $num ]
 }
 
-multi method eval("CALL-FUNC", UInt $ where { $_ == %!vars<div> }, 2, $num) {
+multi method eval("CALL-FUNC", UInt $ where { $_ == %!vars<div> }, 2, UInt:D $num) {
     self.add-pop: $!tmp1;
     self.add-pop: $!tmp2;
     self.add-push: $!context.new-binary-divide: .int, $!tmp1, $!tmp2;

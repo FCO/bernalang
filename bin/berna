@@ -10,12 +10,12 @@ my %*SUB-MAIN-OPTS = :named-anywhere;
 multi MAIN(*@file, Str :$o, *%_) {
     my $run-time-class = Berna::MachineCode with $o;
     my $code = @file>>.IO>>.slurp.join("\n");
-    run $code, :$o, |(:run-time-class($_) with $run-time-class), |%_
+    run $code, :$o, |(:$run-time-class with $o), |%_
 }
 
 multi MAIN(Str :$e!, Str :$o, *%_) {
     my $run-time-class = Berna::MachineCode with $o;
-    run $e, :$o, |(:run-time-class($_) with $run-time-class), |%_
+    run $e, :$o, |(:$run-time-class with $o), |%_
 }
 
 multi run(
