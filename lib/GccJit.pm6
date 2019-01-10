@@ -19,7 +19,6 @@ class GccJit is repr("CPointer") {
         method ptr { gcc_jit_type_get_pointer self.Type }
         method const { gcc_jit_type_get_const self.Type }
         method volatile { gcc_jit_type_get_volatile self.Type }
-        method array { gcc_jit_context_new_array_type self.Type }
         method aligned { gcc_jit_type_get_aligned self.Type }
     }
     class Location is repr("CPointer") {}
@@ -107,6 +106,7 @@ class GccJit is repr("CPointer") {
         }
     }
 
+    sub gcc_jit_context_set_bool_option(GccJit, int16, int16) is native("gccjit") { * }
     sub gcc_jit_context_acquire() returns GccJit is native("gccjit") { * }
     sub gcc_jit_context_get_type(
         GccJit,
@@ -172,7 +172,7 @@ class GccJit is repr("CPointer") {
         Location,
         Type,
         Str
-    ) returns Block is native("gccjit") { * }
+    ) returns LValue is native("gccjit") { * }
     sub gcc_jit_block_add_eval(
         Block,
         Location,
@@ -274,7 +274,10 @@ class GccJit is repr("CPointer") {
         Type
     ) returns Type is native("gccjit") { * }
     sub gcc_jit_context_new_array_type(
-        Type
+        GccJit,
+	Location,
+        Type,
+	int16
     ) returns Type is native("gccjit") { * }
     sub gcc_jit_type_get_aligned(
         Type
@@ -448,4 +451,8 @@ class GccJit is repr("CPointer") {
     method new-array-access(RValue() $ptr, RValue() $index, Location :$location) {
         gcc_jit_context_new_array_access self, $location, $ptr, $index
     }
+    method set-bool-option(int16 $opt, int16 $val) {
+        gcc_jit_context_set_bool_option self, $opt, $val
+    }
+    method new-array-type(Type() $type, int16 $elems, Location :$location) { gcc_jit_context_new_array_type self, $location, $type, $elems }
 }

@@ -5,13 +5,13 @@ unit class Berna::MachineCode;
 has Str                 $.o is required;
 has GccJit              $!context           .= new;
 has GccJit::Type        $!stack-item-type    = $!context.int;
-#has GccJit::Type        $!stack-item-type    = $!context.new-union-type:
-#    "stack_item",
-#    $!context.new-field($!context.int, "int"),
-#    $!context.new-field($!context.const-char-ptr, "str"),
-#;
-has GccJit::Type        $!stack-type         = $!stack-item-type.array;
-has GccJit::Function    $!main               = $!context.new-exported-function: .int, "main";
+##has GccJit::Type        $!stack-item-type    = $!context.new-union-type:
+##    "stack_item",
+##    $!context.new-field($!context.int, "int"),
+##    $!context.new-field($!context.const-char-ptr, "str"),
+##;
+has GccJit::Type        $!stack-type         = $!context.new-array-type: $!stack-item-type, 50;
+has GccJit::Function    $!main               = $!context.new-exported-function: $!context.int, "main";
 has GccJit::Block       $!init               = $!main.new-block: "initial";
 has GccJit::LValue      $!stack              = $!main.new-local: $!stack-type, "stack";
 has GccJit::LValue      $!stack-depth        = $!main.new-local: $!context.int, "stack_depth";
@@ -19,20 +19,22 @@ has GccJit::LValue      $!tmp1               = $!main.new-local: $!context.int, 
 has GccJit::LValue      $!tmp2               = $!main.new-local: $!context.int, "tmp2";
 has                     @.code is required;
 has                     %.vars is required;
-has GccJit::Block       @!blocks             = (^@!code).map: { $!main.new-block: "op_$_" };
+has GccJit::Block       @!blocks             = (^(@!code + 1)).map: { $!main.new-block: "op_$_" };
 has Bool                $.debug              = False;
 has UInt                $!position           = 0;
-has Berna::Scope        $.global            .= new;
-has Berna::Scope        @!scope handles (scope => "tail")    = $!global;
-has Str                 @!type;
+
+method TWEAK(|) {
+    @!blocks.tail.end-with-return: $!context.new-rvalue-from-int: 0;
+    $!init.end-with-jump: @!blocks.head;
+}
 
 method add-print(GccJit::RValue $rvalue) {
     state $printf //= $!context.new-imported-function:
-        .int, "printf",
+        $!context.int, "printf",
         $!context.new-param($!context.const-char-ptr, "format"),
         $!context.new-param($!context.int, "num"),
     ;
-    @!blocks[$!position].add-eval: $!context.new-call: $printf, $!context.new-string-literal: "%d\n", $rvalue
+    @!blocks[$!position].add-eval: $!context.new-call: $printf, $!context.new-string-literal("%d\n"), $rvalue
 }
 
 method add-push(GccJit::RValue $rvalue, GccJit::Location :$location) {
@@ -46,6 +48,7 @@ method add-pop(GccJit::LValue $lvalue, GccJit::Location :$location) {
 }
 
 method run {
+    #$!context.set-bool-option: 2, 1;
     for @!code.keys -> $!position {
         self.eval: |@!code[$!position]
     }
@@ -53,7 +56,7 @@ method run {
 }
 
 multi method eval("GOTO", UInt:D $num) {
-    @!blocks[$!position].end-with-jump: @!blocks[ $num ]
+    @!blocks[$!position].end-with-jump: @!blocks[ $!position + 1 ]
 }
 
 multi method eval("JUMP-IF-FALSE", UInt:D $num) {
@@ -61,18 +64,21 @@ multi method eval("JUMP-IF-FALSE", UInt:D $num) {
     @!blocks[$!position].end-with-conditional: $!tmp2, @!blocks[$!position + 1], @!blocks[ $num ]
 }
 
-multi method eval("PUSH-CONST", Int $val) { self.add-push: $!context.new-rvalue-from-int: $val }
-
-multi method eval("CALL-FUNC", UInt $ where { $_ == %!vars<print> }, 1, UInt:D $num) {
-    self.add-pop: $!tmp1;
-    self.add-print: $!tmp1;
-    @!blocks[$!position].end-with-jump: @!blocks[ $num ]
+multi method eval("PUSH-CONST", Int $val) {
+    self.add-push: $!context.new-rvalue-from-int: $val;
+    @!blocks[$!position].end-with-jump: @!blocks[ $!position + 1 ]
 }
 
-multi method eval("CALL-FUNC", UInt $ where { $_ == %!vars<toString> }, 1, UInt:D $num) {
+multi method eval("CALL-FUNC", UInt $ where { $_ == %!vars<print> }, 1) {
+    self.add-pop: $!tmp1;
+    self.add-print: $!tmp1;
+    @!blocks[$!position].end-with-jump: @!blocks[ $!position + 1 ]
+}
+
+multi method eval("CALL-FUNC", UInt $ where { $_ == %!vars<toString> }, 1) {
     self.add-pop: $!tmp1;
     self.add-push: $!tmp1;
-    @!blocks[$!position].end-with-jump: @!blocks[ $num ]
+    @!blocks[$!position].end-with-jump: @!blocks[ $!position + 1 ]
 }
 
 #multi method eval("CALL-FUNC", UInt $ where { $_ == %!vars<toBoolean> }, 1) {
@@ -93,32 +99,32 @@ multi method eval("CALL-FUNC", UInt $ where { $_ == %!vars<toString> }, 1, UInt:
 #    self.push: $ret
 #}
 
-multi method eval("CALL-FUNC", UInt $ where { $_ == %!vars<sum> }, 2, UInt:D $num) {
+multi method eval("CALL-FUNC", UInt $ where { $_ == %!vars<sum> }, 2) {
     self.add-pop: $!tmp1;
     self.add-pop: $!tmp2;
     self.add-push: $!context.new-binary-plus: .int, $!tmp1, $!tmp2;
-    @!blocks[$!position].end-with-jump: @!blocks[ $num ]
+    @!blocks[$!position].end-with-jump: @!blocks[ $!position + 1 ]
 }
 
-multi method eval("CALL-FUNC", UInt $ where { $_ == %!vars<sub> }, 2, UInt:D $num) {
+multi method eval("CALL-FUNC", UInt $ where { $_ == %!vars<sub> }, 2) {
     self.add-pop: $!tmp1;
     self.add-pop: $!tmp2;
     self.add-push: $!context.new-binary-minus: .int, $!tmp1, $!tmp2;
-    @!blocks[$!position].end-with-jump: @!blocks[ $num ]
+    @!blocks[$!position].end-with-jump: @!blocks[ $!position + 1 ]
 }
 
-multi method eval("CALL-FUNC", UInt $ where { $_ == %!vars<mul> }, 2, UInt:D $num) {
+multi method eval("CALL-FUNC", UInt $ where { $_ == %!vars<mul> }, 2) {
     self.add-pop: $!tmp1;
     self.add-pop: $!tmp2;
     self.add-push: $!context.new-binary-mult: .int, $!tmp1, $!tmp2;
-    @!blocks[$!position].end-with-jump: @!blocks[ $num ]
+    @!blocks[$!position].end-with-jump: @!blocks[$!position + 1 ]
 }
 
-multi method eval("CALL-FUNC", UInt $ where { $_ == %!vars<div> }, 2, UInt:D $num) {
+multi method eval("CALL-FUNC", UInt $ where { $_ == %!vars<div> }, 2) {
     self.add-pop: $!tmp1;
     self.add-pop: $!tmp2;
     self.add-push: $!context.new-binary-divide: .int, $!tmp1, $!tmp2;
-    @!blocks[$!position].end-with-jump: @!blocks[ $num ]
+    @!blocks[$!position].end-with-jump: @!blocks[ $!position + 1 ]
 }
 
 #multi method eval("CALL-FUNC", UInt $ where { $_ == %!vars<equal> }, 2) {
