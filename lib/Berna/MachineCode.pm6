@@ -48,6 +48,7 @@ method run {
     for @!code.keys -> $!position {
         self.eval: |@!code[$!position]
     }
+    $!context.compile-to-executable;
 }
 
 multi method eval("GOTO", $num) {

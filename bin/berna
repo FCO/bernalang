@@ -2,6 +2,7 @@
 use Berna::Parser;
 use Berna::Compiler;
 use Berna::RunTime;
+use Berna::MachineCode;
 subset Code of Str;
 
 my %*SUB-MAIN-OPTS = :named-anywhere;
