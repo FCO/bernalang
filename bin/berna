@@ -50,6 +50,6 @@ multi run(
         note "------------\n"
     }
 
-    my $run-time = $run-time-class.new: :code(@list), :debug($print-runtime), :vars($parser.actions.vars), :$o;
+    my $run-time = $run-time-class.new: :$o, :code(@list), :debug($print-runtime), :vars($parser.actions.vars);
     $run-time.run
 }

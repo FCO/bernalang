@@ -2,6 +2,7 @@ use Berna::Scope;
 use GccJit;
 unit class Berna::MachineCode;
 
+has Str                 $.o is required;
 has GccJit              $!context           .= new;
 has GccJit::Type        $!stack-item-type    = $!context.int;
 #has GccJit::Type        $!stack-item-type    = $!context.new-union-type:
@@ -48,7 +49,7 @@ method run {
     for @!code.keys -> $!position {
         self.eval: |@!code[$!position]
     }
-    $!context.compile-to-executable;
+    $!context.compile-to-executable: $!o;
 }
 
 multi method eval("GOTO", UInt:D $num) {
