@@ -6,22 +6,26 @@ subset Code of Str;
 
 my %*SUB-MAIN-OPTS = :named-anywhere;
 
-multi MAIN(*@file, *%_) {
+multi MAIN(*@file, Str :$o, *%_) {
+    my $run-time-class = Berna::MachineCode with $o;
     my $code = @file>>.IO>>.slurp.join("\n");
-    run $code, |%_
+    run $code, :$o, |(:run-time-class($_) with $run-time-class), |%_
 }
 
-multi MAIN(Str :$e!, *%_) {
-    run $e, |%_
+multi MAIN(Str :$e!, Str :$o, *%_) {
+    my $run-time-class = Berna::MachineCode with $o;
+    run $e, :$o, |(:run-time-class($_) with $run-time-class), |%_
 }
 
 multi run(
     Str $code,
-    Bool :$print-match   = False,
-    Bool :$print-code    = False,
-    Bool :$print-ast     = False,
-    Bool :$print-list    = False,
-    Bool :$print-runtime = False
+    Bool :$print-match      = False,
+    Bool :$print-code       = False,
+    Bool :$print-ast        = False,
+    Bool :$print-list       = False,
+    Bool :$print-runtime    = False,
+         :$run-time-class   = Berna::RunTime,
+    Str  :$o,
 ) {
     my $parser   = Berna::Parser.new: :debug($print-match);
     my $compiler = Berna::Compiler.new;
@@ -45,6 +49,6 @@ multi run(
         note "------------\n"
     }
 
-    my $run-time = Berna::RunTime.new: :code(@list), :debug($print-runtime), :vars($parser.actions.vars);
+    my $run-time = $run-time-class.new: :code(@list), :debug($print-runtime), :vars($parser.actions.vars), :$o;
     $run-time.run
 }
